@@ -5,25 +5,42 @@
  *      Author: Tiffany Huang
  */
 
-#include <random>
-#include <algorithm>
-#include <iostream>
-#include <numeric>
-#include <math.h> 
-#include <iostream>
-#include <sstream>
-#include <string>
-#include <iterator>
+
 
 #include "particle_filter.h"
 
 using namespace std;
 
 void ParticleFilter::init(double x, double y, double theta, double std[]) {
-	// TODO: Set the number of particles. Initialize all particles to first position (based on estimates of 
-	//   x, y, theta and their uncertainties from GPS) and all weights to 1. 
+	//   x, y, theta and their uncertainties from GPS) and all weights to 1.
 	// Add random Gaussian noise to each particle.
 	// NOTE: Consult particle_filter.h for more information about this method (and others in this file).
+
+	// Initialize number of particles
+	num_particles = 10;
+
+	// Setup distributions
+	std::default_random_engine generator;
+	std::normal_distribution<double> distribution_x(x, std[0]);
+	std::normal_distribution<double> distribution_y(y, std[1]);
+	std::normal_distribution<double> distribution_theta(theta, std[2]);
+
+	// Initialize each particle with first measurement and add random noise
+	for (int i=0; i<num_particles; i++) {
+		// Initialize new particle
+		Particle new_particle;
+
+		new_particle.id = i;
+		new_particle.x = distribution_x(generator);
+		new_particle.y = distribution_y(generator);
+		new_particle.theta = distribution_theta(generator);
+
+		particles.push_back(new_particle);
+	}
+
+	is_initialized = true;
+	std::cout << particles[num_particles - 1].x;
+
 
 }
 

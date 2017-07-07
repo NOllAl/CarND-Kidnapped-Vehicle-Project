@@ -9,6 +9,17 @@
 #ifndef PARTICLE_FILTER_H_
 #define PARTICLE_FILTER_H_
 
+#include <random>
+#include <algorithm>
+#include <iostream>
+#include <numeric>
+#include <math.h>
+#include <iostream>
+#include <sstream>
+#include <string>
+#include <iterator>
+#include <vector>
+
 #include "helper_functions.h"
 
 struct Particle {
