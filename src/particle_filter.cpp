@@ -45,11 +45,40 @@ void ParticleFilter::init(double x, double y, double theta, double std[]) {
 }
 
 void ParticleFilter::prediction(double delta_t, double std_pos[], double velocity, double yaw_rate) {
-	// TODO: Add measurements to each particle and add random Gaussian noise.
 	// NOTE: When adding noise you may find std::normal_distribution and std::default_random_engine useful.
 	//  http://en.cppreference.com/w/cpp/numeric/random/normal_distribution
 	//  http://www.cplusplus.com/reference/random/default_random_engine/
 
+	std::cout << "Yaw rate = " << yaw_rate << std::endl;
+	// Setup distributions
+	std::default_random_engine generator;
+	std::normal_distribution<double> distribution_x(0, std_pos[0]);
+	std::normal_distribution<double> distribution_y(0, std_pos[1]);
+	std::normal_distribution<double> distribution_theta(0, std_pos[2]);
+
+	// Loop over particles
+	for (int id = 0; id < num_particles; id++) {
+		// Extract old particle coordinates
+		Particle particle = particles[id];
+		double x = particle.x;
+		double y = particle.y;
+		double theta = particle.theta;
+
+		// Prediction step
+		double x_new = x + velocity / yaw_rate * (sin(theta + yaw_rate * delta_t) - sin(theta));
+		double y_new = y + velocity / yaw_rate * (-cos(theta + yaw_rate * delta_t) + cos(theta));
+		double theta_new = theta + yaw_rate * delta_t;
+
+		// Add random noise to estimates
+		x_new += distribution_x(generator);
+		y_new += distribution_y(generator);
+		theta_new += distribution_theta(generator);
+
+		// Write predictions back into particle
+		particles[id].x = x_new;
+		particles[id].y = y_new;
+		particles[id].theta = theta_new;
+	}
 }
 
 void ParticleFilter::dataAssociation(std::vector<LandmarkObs> predicted, std::vector<LandmarkObs>& observations) {
@@ -58,6 +87,10 @@ void ParticleFilter::dataAssociation(std::vector<LandmarkObs> predicted, std::ve
 	// NOTE: this method will NOT be called by the grading code. But you will probably find it useful to 
 	//   implement this method and use it as a helper during the updateWeights phase.
 
+	// Loop over particles
+	for (int id = 0; id < num_particles; id++) {
+
+	}
 }
 
 void ParticleFilter::updateWeights(double sensor_range, double std_landmark[], 
@@ -72,6 +105,12 @@ void ParticleFilter::updateWeights(double sensor_range, double std_landmark[],
 	//   and the following is a good resource for the actual equation to implement (look at equation 
 	//   3.33
 	//   http://planning.cs.uiuc.edu/node99.html
+	for (int i = 0; i < observations.size(); i++) {
+		std::cout << "Observation number " << i << " has x-coordinate " << observations[i].x << " and y-coordinate " <<
+					observations[i].y << "\n\n";
+	}
+
+
 }
 
 void ParticleFilter::resample() {
