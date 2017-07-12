@@ -19,6 +19,7 @@
 #include <string>
 #include <iterator>
 #include <vector>
+#include <limits>
 
 #include "helper_functions.h"
 
@@ -86,10 +87,10 @@ public:
 	/**
 	 * dataAssociation Finds which observations correspond to which landmarks (likely by using
 	 *   a nearest-neighbors data association).
-	 * @param predicted Vector of predicted landmark observations
+	 * @param map_landmarks Landmarks on map
 	 * @param observations Vector of landmark observations
 	 */
-	void dataAssociation(std::vector<LandmarkObs> predicted, std::vector<LandmarkObs>& observations);
+	void dataAssociation(std::vector<LandmarkObs> observations, Map map_landmarks);
 	
 	/**
 	 * updateWeights Updates the weights for each particle based on the likelihood of the 

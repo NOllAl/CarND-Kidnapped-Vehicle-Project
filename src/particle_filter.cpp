@@ -17,7 +17,7 @@ void ParticleFilter::init(double x, double y, double theta, double std[]) {
 	// NOTE: Consult particle_filter.h for more information about this method (and others in this file).
 
 	// Initialize number of particles
-	num_particles = 10;
+	num_particles = 3;
 
 	// Setup distributions
 	std::default_random_engine generator;
@@ -81,16 +81,80 @@ void ParticleFilter::prediction(double delta_t, double std_pos[], double velocit
 	}
 }
 
-void ParticleFilter::dataAssociation(std::vector<LandmarkObs> predicted, std::vector<LandmarkObs>& observations) {
-	// TODO: Find the predicted measurement that is closest to each observed measurement and assign the 
-	//   observed measurement to this particular landmark.
-	// NOTE: this method will NOT be called by the grading code. But you will probably find it useful to 
-	//   implement this method and use it as a helper during the updateWeights phase.
+void ParticleFilter::dataAssociation(std::vector<LandmarkObs> observations, Map map_landmarks) {
+  //   observed measurement to this particular landmark.
+  // NOTE: this method will NOT be called by the grading code. But you will probably find it useful to
+  //   implement this method and use it as a helper during the updateWeights phase.
+  int n_obs = observations.size();
+  // Print measurements; for debugging only
+  for (int j = 0; j < n_obs; j++) {
+    std::cout << "Observation number " << j << " has x-coordinate " << observations[j].x << " and y-coordinate " <<
+              observations[j].y << "\n\n";
+  }
 
-	// Loop over particles
-	for (int id = 0; id < num_particles; id++) {
+  // Loop over particles
+  for (int i = 0; i < num_particles; i++) {
+    // Associate current particle in loop with variable
+    Particle current_particle = particles[i];
 
-	}
+    // Initialize associations for current particle
+    std::vector<int> associations(n_obs);
+    std::vector<double> sense_x(n_obs);
+    std::vector<double> sense_y(n_obs);
+
+    // Loop over observations to find closest landmark
+    for (int j = 0; j < n_obs; j++) {
+      // Transform observations to map coordinate system
+
+      // Read coordinates of current observations
+      double obs_x = observations[j].x;
+      double obs_y = observations[j].y;
+
+      // Rotated observation
+      double obs_x_global = cos(-current_particle.theta) * obs_x + sin(-current_particle.theta) * obs_y;
+      double obs_y_global = -sin(-current_particle.theta) * obs_x + cos(current_particle.theta) * obs_y;
+
+      // Rotated and translated observation
+      obs_x_global += current_particle.x;
+      obs_y_global += current_particle.y;
+
+      std::cout << "\n\nx coordinate for observation " << j << " of particle " << i << ": " << obs_x_global;
+      std::cout << "\ny coordinate for observation " << j << " of particle " << i << ": " << obs_y_global;
+
+      // Associate measurement with map landmark by computing the nearest landmark
+      // To that end, iterate over landmarks to find nearest distance
+      double nearest_dist = std::numeric_limits<double>::max();
+      double nearest_x;
+      double nearest_y;
+
+      int id_associated;
+      for (int k = 0; k < map_landmarks.landmark_list.size(); k++) {
+        // Get landmark data
+        double lm_x = map_landmarks.landmark_list[k].x_f;
+        double lm_y = map_landmarks.landmark_list[k].y_f;
+        int lm_id = map_landmarks.landmark_list[k].id_i;
+
+        // Compute distance
+        double lm_dist = dist(obs_x_global, obs_y_global, lm_x, lm_y);
+        if (lm_dist < nearest_dist) {
+          nearest_dist = lm_dist;
+          id_associated = lm_id;
+          nearest_x = lm_x;
+          nearest_y = lm_y;
+        }
+      }
+      // Set association vector
+      associations[j] = id_associated;
+      sense_x[j] = nearest_x;
+      sense_y[j] = nearest_y;
+
+      std::cout << "\nAssociated landmark id is " << id_associated << "\n\n";
+    }
+    // Write associations into particle
+    current_particle.associations = associations;
+    current_particle.sense_x = sense_x;
+    current_particle.sense_y = sense_y;
+  }
 }
 
 void ParticleFilter::updateWeights(double sensor_range, double std_landmark[], 
@@ -105,12 +169,9 @@ void ParticleFilter::updateWeights(double sensor_range, double std_landmark[],
 	//   and the following is a good resource for the actual equation to implement (look at equation 
 	//   3.33
 	//   http://planning.cs.uiuc.edu/node99.html
-	for (int i = 0; i < observations.size(); i++) {
-		std::cout << "Observation number " << i << " has x-coordinate " << observations[i].x << " and y-coordinate " <<
-					observations[i].y << "\n\n";
-	}
 
-
+  // Do data association
+  dataAssociation(observations, map_landmarks);
 }
 
 void ParticleFilter::resample() {
